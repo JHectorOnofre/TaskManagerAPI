@@ -16,6 +16,7 @@
 
         public DateTime CreatedAt { get; set; } = DateTime.Now; // gestionar cuándo se creó el registro con un valor por defecto 
 
+        public bool IsDeleted { get; set; } = false; //15 ene
 
         // 8enero
         public int? CategoryId { get; set; } = 0; // llave foránea relación con tabla Category

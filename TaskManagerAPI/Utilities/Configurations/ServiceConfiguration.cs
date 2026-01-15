@@ -8,7 +8,7 @@ namespace TaskManager.Utilities.Configurations
 
         public static void AddServices(this IServiceCollection services)
         {
-            services.AddScoped<ITaskService, TaskService>();
+            services.AddScoped<ITaskService, TaskService>(); // conecta la interfaz con la clase
         }
     }
 }

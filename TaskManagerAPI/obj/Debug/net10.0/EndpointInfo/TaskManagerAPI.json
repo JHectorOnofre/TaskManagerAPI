@@ -717,6 +717,9 @@
             "type": "string",
             "nullable": true
           },
+          "isDeleted": {
+            "type": "boolean"
+          },
           "tasks": {
             "type": "array",
             "items": {
@@ -798,6 +801,9 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "isDeleted": {
+            "type": "boolean"
           },
           "categoryId": {
             "type": "integer",

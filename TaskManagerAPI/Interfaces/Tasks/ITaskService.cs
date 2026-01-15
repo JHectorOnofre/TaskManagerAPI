@@ -20,5 +20,15 @@ namespace TaskManagerAPI.Interfaces.Tasks
             int page,
             int pageSize
         );
-    }
+
+        // Actualizando la Interfaz con los métodos que provienen de TaskItemsController.cs
+        Task<IEnumerable<TaskSearchResult>> SearchAsync(TaskSearchRequest request); // GET Search
+
+        Task<IEnumerable<TaskSearchResult>> GetPagedTasksAsync(int page, int pageSize); // GET "paged"
+        
+        Task<IEnumerable<TaskWithCategoryDto>> GetTasksWithCategoryAsync(); // para servicio GET "with category"
+
+
+    } // Scope de la interfaz
+
 }

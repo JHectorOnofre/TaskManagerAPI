@@ -28,6 +28,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseMiddleware<GlobalErrorHandlerMiddleware>(); //14 ene: debe estar antes del mapeo de controladores (.MapController)
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

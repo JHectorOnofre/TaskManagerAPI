@@ -5,6 +5,7 @@ using TaskManagerAPI.DTOs;
 using TaskManagerAPI.DTOs.Task;
 using TaskManagerAPI.Interfaces.Tasks;
 using TaskManagerAPI.Models;
+using TaskManagerAPI.Utilities.Exceptions;
 
 
 
@@ -70,7 +71,7 @@ namespace TaskManagerAPI.Controllers
 
             var categoryExists = await _context.Categories.AnyAsync(c => c.Id == request.CategoryId); //9enero: se agrega verificación si el registro con el Id existe (antes de crear registro con info. incompleta)
             if (!categoryExists)
-                return BadRequest("CategoryId no existe.");
+                throw new BusinessException("La categoría no existe.", 404); // 15 ene: lanza la excepción personalizada
 
             var entity = new TaskItem
             {
@@ -132,90 +133,104 @@ namespace TaskManagerAPI.Controllers
         [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<TaskSearchResult>>> Search([FromQuery] TaskSearchRequest request)
         {
-            var query = _context.Tasks.AsQueryable(); //.AsQueryable: Permite agregar condiciones sin ejecutar la consulta
+            //    var query = _context.Tasks.AsQueryable(); //.AsQueryable: Permite agregar condiciones sin ejecutar la consulta
 
-            if (!string.IsNullOrWhiteSpace(request.text))
-                query = query.Where(t => t.Title.Contains(request.text));
+            //    if (!string.IsNullOrWhiteSpace(request.text))
+            //        query = query.Where(t => t.Title.Contains(request.text));
 
-            if (request.completed.HasValue)
-                query = query.Where(t => t.IsComplete == request.completed);
+            //    if (request.completed.HasValue)
+            //        query = query.Where(t => t.IsComplete == request.completed);
 
-            if (request.step.HasValue)
-                query = query.Where(t => t.Step == request.step);
+            //    if (request.step.HasValue)
+            //        query = query.Where(t => t.Step == request.step);
 
-            query = request.orderBy switch
-            {
-                "title" => query.OrderBy(t => t.Title),
-                "title_desc" => query.OrderByDescending(t => t.Title),
-                "date" => query.OrderBy(t => t.CreatedAt),
-                "date_desc" => query.OrderByDescending(t => t.CreatedAt),
-                "step" => query.OrderBy(t => t.Step),
-                "step_desc" => query.OrderByDescending(t => t.Step),
-                _ => query.OrderBy(t => t.Id) // _ para valores vacíos
-            };
+            //    query = request.orderBy switch // Ordenamiento por medio de un Switch
+            //    {
+            //        "title" => query.OrderBy(t => t.Title),
+            //        "title_desc" => query.OrderByDescending(t => t.Title),
+            //        "date" => query.OrderBy(t => t.CreatedAt),
+            //        "date_desc" => query.OrderByDescending(t => t.CreatedAt),
+            //        "step" => query.OrderBy(t => t.Step),
+            //        "step_desc" => query.OrderByDescending(t => t.Step),
+            //        _ => query.OrderBy(t => t.Id) // _ para valores vacíos
+            //    };
 
-            //Ejercicio Enero 6: Agregar lógica de paginación
-            var pagedQuery = query
-                .Skip((request.page - 1) * request.pageSize).Take(request.pageSize);
+            //    //Ejercicio Enero 6: Agregar lógica de paginación
+            //    var pagedQuery = query
+            //        .Skip((request.page - 1) * request.pageSize).Take(request.pageSize);
 
-            var results = await pagedQuery
-                .Select(t => new TaskSearchResult
-                {
-                    Identificador = t.Id,
-                    TituloLibro = t.Title,
-                    Completada = t.IsComplete,
-                    PasoActual = t.Step,
-                    FechaCreacion = t.CreatedAt
-                })
-                .ToListAsync();
+            //    var results = await pagedQuery
+            //        .Select(t => new TaskSearchResult
+            //        {
+            //            Identificador = t.Id,
+            //            TituloLibro = t.Title,
+            //            Completada = t.IsComplete,
+            //            PasoActual = t.Step,
+            //            FechaCreacion = t.CreatedAt
+            //        })
+            //        .ToListAsync();
+
+            //    return Ok(results);
+            //}
+            var results = await _taskService.SearchAsync(request); //obtener sólo el resultado sin la lógica de por medio (el cómo)
 
             return Ok(results);
         }
 
-        /* Ejercicio 6 enero:
-         * [HttpGet] método Get (consultar datos sin afectar la BD), asíncrono que devuelve una lista de objetos tipo "TaskSearchResult" (DTO) / ActionResult para respueta Http (200)
-         * [FromQuery] para extraer parámetros de la URL y la cantidad (por defecto mostrará 10)
-         * .Skip: Cantidad de registros que debe saltarse (segmentados de 10 en 10)
-         */
+
+
         [HttpGet("paged")] // método que responde peticiones Get en la ruta nombrada como "paged"
         public async Task<ActionResult<IEnumerable<TaskSearchResult>>> GetPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        //public async Task<ActionResult<IEnumerable<TaskSearchResult>>> GetPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        //{
+        //    var query = _context.Tasks.OrderBy(t => t.Id).Skip((page - 1) * pageSize).Take(pageSize); // lógica del query: ordenamiento ascendente por ID
+        //    var result = await query.Select(t => new TaskSearchResult // ejecución del query en la BD
+        //    {
+
+        //        Identificador = t.Id,
+        //        TituloLibro = t.Title,
+        //        Completada = t.IsComplete,
+        //        PasoActual = t.Step,
+        //        FechaCreacion = t.CreatedAt
+        //    }).ToListAsync(); // el resultado (result) se convierte a una lista y se envía a SQL
+
+        //    return Ok(result);
+        //}
+
+
         {
-            var query = _context.Tasks.OrderBy(t => t.Id).Skip((page - 1) * pageSize).Take(pageSize); // lógica del query: ordenamiento ascendente por ID
-            var result = await query.Select(t => new TaskSearchResult // ejecución del query en la BD
-            {
-                // mapea solo de los campos necesarios al objeto DTO
-                Identificador = t.Id,
-                TituloLibro = t.Title,
-                Completada = t.IsComplete,
-                PasoActual = t.Step,
-                FechaCreacion = t.CreatedAt
-            }).ToListAsync(); // el resultado (result) se convierte a una lista y se envía a SQL
+            // Llama al método del servicio pasando los parámetros que recibimos por URL
+            var result = await _taskService.GetPagedTasksAsync(page, pageSize);
 
             return Ok(result);
         }
 
+
         [HttpGet("with-category")]
         public async Task<ActionResult<IEnumerable<TaskWithCategoryDto>>> GetWithCategory()
         {
-              var result = await _context.Tasks
-                .Include(t => t.Category)
-                .OrderBy(t => t.Id)
-                .Select(t => new TaskWithCategoryDto
-                {
-                    Id = t.Id,
-                    Title = t.Title,
-                    IsCompleted = t.IsComplete,
-                    Step = t.Step,
-                    CreatedAt = t.CreatedAt,
+            //  var result = await _context.Tasks
+            //    .Include(t => t.Category)
+            //    .OrderBy(t => t.Id)
+            //    .Select(t => new TaskWithCategoryDto
+            //    {
+            //        Id = t.Id,
+            //        Title = t.Title,
+            //        IsCompleted = t.IsComplete,
+            //        Step = t.Step,
+            //        CreatedAt = t.CreatedAt,
 
-                    // Antes: CategoryId = (int)t.CategoryId, = error de exceción: Debido al Casting null a int)
-                    CategoryId = t.CategoryId ?? 0, // si es null, establecer 0 en su lugar (evita la excepción)
-                    CategoryName = t.Category.Name
-                })
-                .ToListAsync();
+            //        // Antes: CategoryId = (int)t.CategoryId, = error de exceción: Debido al Casting null a int)
+            //        CategoryId = t.CategoryId ?? 0, // si es null, establecer 0 en su lugar (evita la excepción)
+            //        CategoryName = t.Category.Name
+            //    })
+            //    .ToListAsync();
 
+            //return Ok(result);
+
+            var result = await _taskService.GetTasksWithCategoryAsync(); // en lugar de usar _context ahora es _taskService
             return Ok(result);
-        } /* 9 ene: modificar esta búsqueda para que aun con el error de excepción retorne la lista de registros que hay actual */
+        } 
 
 
         [HttpGet("advanced-search")]
@@ -227,57 +242,10 @@ namespace TaskManagerAPI.Controllers
             [FromQuery] string? categoryName,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10
-        )
+            )
         {
-            //var query = _context.Tasks
-            //.Include(t => t.Category)
-            //.AsQueryable();
 
-            //if (!string.IsNullOrWhiteSpace(text))
-            //    query = query.Where(t => t.Title.Contains(text));
-
-            //if (completed.HasValue)
-            //    query = query.Where(t => t.IsComplete == completed);
-
-            //if (step.HasValue)
-            //    query = query.Where(t => t.Step == step);
-
-            //if (categoryId.HasValue)
-            //    query = query.Where(t => t.CategoryId == categoryId);
-
-            //if (!string.IsNullOrWhiteSpace(categoryName))
-            //{
-            //    var name = categoryName.Trim();
-            //    query = query.Where(t => t.Category.Name.Contains(name)); // 
-            //}
-
-            //var totalCount = await query.CountAsync(); //retorna cant. registros con base a los filtros (previo a paginación) de lo contrario se vería limitada por la propia paginación
-            //// 12 ene: agregar data annotations para dtos
-            //var items = await query
-            //    .OrderBy(t => t.Id)
-            //    .Skip((page - 1) * pageSize)
-            //    .Take(pageSize)
-            //    .Select(t => new TaskWithCategoryDto
-            //    {
-            //        Id = t.Id,
-            //        Title = t.Title,
-            //        IsCompleted = t.IsComplete,
-            //        Step = t.Step,
-            //        CreatedAt = t.CreatedAt,
-            //        CategoryId = t.CategoryId ?? 0, //establecer el cero por defecto 
-            //        CategoryName = t.Category.Name 
-            //    })
-            //    .ToListAsync();
-
-            //var result = new PagedResultDto<TaskWithCategoryDto>
-            //{
-            //    Page = page,
-            //    PageSize = pageSize,
-            //    TotalCount = totalCount,
-            //    Items = items
-            //};
-
-            //return Ok(result);
+            throw new Exception("La categoría no existe."); //14 ene
 
             //13 enero:
             if (page <= 0) return BadRequest("Page debe ser mayor a 0.");
@@ -291,15 +259,6 @@ namespace TaskManagerAPI.Controllers
     }
 
 }
-
-
-/*Crear Atributo POST
-        [HttpPost] 
-        public void Post(TaskItem task) // TipoDato y variable de "TaskItem.cs > Models"
-        {
-            _context.Tasks.Add(task);
-        } 
-        */
 
 
 

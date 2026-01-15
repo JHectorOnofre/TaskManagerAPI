@@ -169,3 +169,4 @@ C:\Users\KSIDEV\source\repos\TaskManagerAPI\TaskManagerAPI\bin\Debug\net10.0\run
 C:\Users\KSIDEV\source\repos\TaskManagerAPI\TaskManagerAPI\bin\Debug\net10.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\KSIDEV\source\repos\TaskManagerAPI\TaskManagerAPI\bin\Debug\net10.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\KSIDEV\source\repos\TaskManagerAPI\TaskManagerAPI\bin\Debug\net10.0\runtimes\win\lib\net9.0\System.Windows.Extensions.dll
+C:\Users\KSIDEV\source\repos\TaskManagerAPI\TaskManagerAPI\obj\Debug\net10.0\TaskManagerAPI.sourcelink.json
