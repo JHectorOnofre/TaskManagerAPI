@@ -365,7 +365,7 @@
             "name": "pageSize",
             "in": "query",
             "schema": {
-              "maximum": 50,
+              "maximum": 100,
               "minimum": 1,
               "type": "integer",
               "format": "int32"
@@ -767,7 +767,7 @@
         "properties": {
           "title": {
             "maxLength": 200,
-            "minLength": 1,
+            "minLength": 2,
             "type": "string"
           },
           "isCompleted": {
@@ -925,6 +925,9 @@
         "type": "object",
         "properties": {
           "title": {
+            "maxLength": 200,
+            "minLength": 0,
+            "pattern": "^[a-zA-Z0-9\\s]*$",
             "type": "string",
             "nullable": true
           },

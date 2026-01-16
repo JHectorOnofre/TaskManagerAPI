@@ -14,7 +14,9 @@ namespace TaskManagerAPI.DTOs.Task
         // Se agregan "page" y "pageSize" para paginación Ejercicio 6 enero y sus Data Annotations
         [Range(1, int.MaxValue, ErrorMessage = "El número de página debe ser mayor a 0")]
         public int page { get; set; } = 1; // por defecto página 1
-        [Range(1, 50, ErrorMessage = "El tamaño de página debe estar entre y X")]
+        
+        
+        [Range(1, 100, ErrorMessage = "El tamaño de página debe estar entre 1 y 100 (10 por defecto)")]
         public int pageSize { get; set; } = 10; // por defecto 10 registros
     }
 }
