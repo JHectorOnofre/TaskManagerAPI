@@ -21,7 +21,13 @@ namespace TaskManagerAPI.Interfaces.Tasks
             int pageSize
         );
 
-        // Actualizando la Interfaz con los métodos que provienen de TaskItemsController.cs
+        //1. Actualizando la Interfaz con los métodos que provienen de TaskItemsController.cs
+
+        Task<IEnumerable<TaskItemResponse>> GetTasksAsync(); // GET /tasks
+        Task<TaskItemResponse?> GetByIdAsync(int id); // GET {id:int}
+        Task<TaskItemResponse> CreateTaskAsync(CreateTaskRequest request); // POST/tasks
+        Task<bool> UpdateTaskAsync(int id, UpdateTaskRequest taskDto); // PUT {id}
+        Task<bool> DeleteTaskAsync(int id); // Delete {id}
         Task<IEnumerable<TaskSearchResult>> SearchAsync(TaskSearchRequest request); // GET Search
 
         Task<IEnumerable<TaskSearchResult>> GetPagedTasksAsync(int page, int pageSize); // GET "paged"

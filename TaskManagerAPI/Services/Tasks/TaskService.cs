@@ -5,6 +5,8 @@ using TaskManagerAPI.DTOs;
 using TaskManagerAPI.DTOs.Task;
 using TaskManagerAPI.Interfaces;
 using TaskManagerAPI.Interfaces.Tasks;
+using TaskManagerAPI.Models;
+using TaskManagerAPI.Utilities.Exceptions;
 
 public class TaskService : ITaskService
 {
@@ -121,7 +123,7 @@ public class TaskService : ITaskService
     }
 
 
-    public async Task<IEnumerable<TaskSearchResult>> SearchAsync(TaskSearchRequest request)
+    public async Task<IEnumerable<TaskSearchResult>> SearchAsync(TaskSearchRequest request) // GET /search
     {
         var query = _context.Tasks.AsQueryable();
 
@@ -165,5 +167,98 @@ public class TaskService : ITaskService
         return results;
     }
 
+
+    public async Task<bool> DeleteTaskAsync(int id) // DELETE{id}
+    {
+        var task = await _context.Tasks.FindAsync(id); // lógica de búsqueda
+        if (task == null) return false; // lógica de validación
+
+        _context.Tasks.Remove(task); // lóg de borrado: si existe, elimina la fila  
+        await _context.SaveChangesAsync(); // lóg de persistencia: se aplican los cambios hacia la BD
+
+        return true; // éxito
+    }
+
+
+    public async Task<bool> UpdateTaskAsync(int id, UpdateTaskRequest request) // PUT 
+    {
+        var task = await _context.Tasks.FindAsync(id);
+        if (task == null) return false;
+
+        if (!string.IsNullOrWhiteSpace(request.Title))
+        {
+            task.Title = request.Title.Trim();
+        }
+
+        if (request.IsCompleted.HasValue)
+        {
+            task.IsComplete = request.IsCompleted.Value;
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+
+    public async Task<TaskItemResponse> CreateTaskAsync(CreateTaskRequest request) // POST
+    {
+        // 1. Regla de negocio = validar la categoría dado un Id
+        var categoryExists = await _context.Categories.AnyAsync(c => c.Id == request.CategoryId);
+        if (!categoryExists)
+            throw new BusinessException("La categoría no existe.", 404);
+
+        
+        var entity = new TaskItem // 2. Mapeo del Request a la Entidad
+        {
+            Title = request.Title.Trim(),
+            IsComplete = false,
+            CategoryId = request.CategoryId,
+        };
+
+        // 3. Persistencia
+        _context.Tasks.Add(entity);
+        await _context.SaveChangesAsync();
+
+        // 4. Mapeo de Entidad a Response (DTO)
+        return new TaskItemResponse
+        {
+            Id = entity.Id,
+            Title = entity.Title,
+            IsCompleted = entity.IsComplete
+        };
+    }
+
+
+    public async Task<TaskItemResponse?> GetByIdAsync(int id) // GET{id}
+    {
+        // CORTADO: La lógica de búsqueda en la BD
+        var task = await _context.Tasks.FindAsync(id);
+
+        // Si es nulo, devolvemos null (el controlador decidirá qué error HTTP enviar)
+        if (task == null) return null;
+
+        // CORTADO: El mapeo de la entidad al DTO
+        return new TaskItemResponse
+        {
+            Id = task.Id,
+            Title = task.Title,
+            IsCompleted = task.IsComplete
+        };
+    }
+
+
+    public async Task<IEnumerable<TaskItemResponse>> GetTasksAsync()
+    {
+        var tasks = await _context.Tasks
+            .Select(t => new TaskItemResponse
+            {
+                Id = t.Id,
+                Title = t.Title,
+                IsCompleted = t.IsComplete
+            })
+        .ToListAsync();
+
+        return (tasks);
+    }
 
 }

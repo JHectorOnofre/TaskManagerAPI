@@ -27,36 +27,47 @@ namespace TaskManagerAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<List<TaskItem>>> Get() // se agrega async, ActionResult
         {
-            //return _context.Tasks.ToList();
-            var tasks = await _context.Tasks
-                .Select(t => new TaskItemResponse
-                {
-                Id = t.Id,
-                Title = t.Title,
-                IsCompleted = t.IsComplete
-            })
-            .ToListAsync();
+            ////return _context.Tasks.ToList();
+            //var tasks = await _context.Tasks
+            //    .Select(t => new TaskItemResponse
+            //    {
+            //    Id = t.Id,
+            //    Title = t.Title,
+            //    IsCompleted = t.IsComplete
+            //})
+            //.ToListAsync();
 
-            return Ok(tasks); 
-        } // Hacer un método POST que guarde un valor de forma async
+            //return Ok(tasks);
+            var result = await _taskService.GetTasksAsync(); // llamada al servicio, se guarda en var result
+
+            return Ok(result);
+        } 
 
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<TaskItemResponse>> GetById(int id)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            //var task = await _context.Tasks.FindAsync(id);
 
-            if (task == null)
+            //if (task == null)
+            //    return NotFound();
+
+            //var dto = new TaskItemResponse
+            //{
+            //    Id = task.Id,
+            //    Title = task.Title,
+            //    IsCompleted= task.IsComplete
+            //};
+
+            //return Ok(dto);
+            
+            // result (viene del servicio) en lugar de task (era directa)
+            var result = await _taskService.GetByIdAsync(id); // se llama al resultado de lo que hace  servicio (TaskService)
+
+            if (result == null) // revisa si el servicio devuelve algo, si no: 404 
                 return NotFound();
 
-            var dto = new TaskItemResponse
-            {
-                Id = task.Id,
-                Title = task.Title,
-                IsCompleted= task.IsComplete
-            };
-
-            return Ok(dto);
+            return Ok(result); // entrega el resultado final dado por el servicio TaskService
         }
 
 
@@ -69,49 +80,55 @@ namespace TaskManagerAPI.Controllers
             if (string.IsNullOrWhiteSpace(request.Title))
                 return BadRequest("Title es requerido.");
 
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == request.CategoryId); //9enero: se agrega verificación si el registro con el Id existe (antes de crear registro con info. incompleta)
-            if (!categoryExists)
-                throw new BusinessException("La categoría no existe.", 404); // 15 ene: lanza la excepción personalizada
+            //var categoryExists = await _context.Categories.AnyAsync(c => c.Id == request.CategoryId); //9enero: se agrega verificación si el registro con el Id existe (antes de crear registro con info. incompleta)
+            //if (!categoryExists)
+            //    throw new BusinessException("La categoría no existe.", 404); // 15 ene: lanza la excepción personalizada
 
-            var entity = new TaskItem
-            {
-                Title = request.Title.Trim(),
-                IsComplete = false,
-                CategoryId = request.CategoryId,
-            };
+            //var entity = new TaskItem
+            //{
+            //    Title = request.Title.Trim(),
+            //    IsComplete = false,
+            //    CategoryId = request.CategoryId,
+            //};
 
-            _context.Tasks.Add(entity);
-            await _context.SaveChangesAsync(); // Ejecuta el guardado de los cambios (se debe hacer siempre que se modifique la BD=
+            //_context.Tasks.Add(entity);
+            //await _context.SaveChangesAsync(); // Ejecuta el guardado de los cambios (se debe hacer siempre que se modifique la BD=
 
-            var dto = new TaskItemResponse
-            {
-                Id = entity.Id,
-                Title = entity.Title,
-                IsCompleted = entity.IsComplete
-            };
+            //var dto = new TaskItemResponse
+            //{
+            //    Id = entity.Id,
+            //    Title = entity.Title,
+            //    IsCompleted = entity.IsComplete
+            //};
 
-            return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto); // devuelve respuesta compuesta por 3 parámetros (según lógica req)
+            //return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto); // devuelve respuesta compuesta por 3 parámetros (según lógica req)
+
+            var dto = await _taskService.CreateTaskAsync(request);
+
+            return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto); // devuelve la respuesta exitosa con la ruta 
         }
 
 
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskRequest request)
         {
-            var task = await _context.Tasks.FindAsync(id);
-            if (task == null) return NotFound();
+            //var task = await _context.Tasks.FindAsync(id); //busca la tarea original
+            //if (task == null) return NotFound();
 
             if (request == null) return BadRequest("Body requerido.");
             if (string.IsNullOrWhiteSpace(request.Title)) return BadRequest("Title es requerido.");
 
-            task.Title = request.Title.Trim();
+            //task.Title = request.Title.Trim();
 
-            if (request.IsCompleted.HasValue) // Revisión explícita del valor (HasValue = cuando la propiedad admite null)
-            {
-                task.IsComplete = request.IsCompleted.Value;
-            }
-            
+            //if (request.IsCompleted.HasValue) // Revisión explícita del valor (HasValue = cuando la propiedad admite null)
+            //{
+            //    task.IsComplete = request.IsCompleted.Value;
+            //}
 
-            await _context.SaveChangesAsync();
+            //await _context.SaveChangesAsync();
+            var result = await _taskService.UpdateTaskAsync(id, request);
+
+            if (!result) return NotFound();
 
             return NoContent(); // 204
         }
@@ -120,13 +137,11 @@ namespace TaskManagerAPI.Controllers
         [HttpDelete("{id:int}")] // Se debe hacer un borrado lógico que se mantiene en memoria (campo deleted)
         public async Task<IActionResult> Delete(int id)
         {
-            var task = await _context.Tasks.FindAsync(id);
-            if (task == null) return NotFound();
+            var result = await _taskService.DeleteTaskAsync(id); //llamada al servicio (TaskSercice.cs)
 
-            _context.Tasks.Remove(task);
-            await _context.SaveChangesAsync(); // se aplican los cambios hacia la BD
+            if (!result) return NotFound(); // si el servicio da "false", se devuelve como antes "NotFound"
 
-            return NoContent();
+            return NoContent(); // si todo sale bien, el "NoContent" que se tenía antes
         }
 
 
