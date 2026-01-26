@@ -11,5 +11,7 @@ namespace TaskManagerAPI.Interfaces.Categories
         Task<IEnumerable<CategoryDto>> GetCategoriesAsync(); // GET/categories
         Task<CategoryDto?> GetCategoryByIdAsync(int id); // GET /categories{id}
         Task<CategoryDto> CreateCategoryAsync(CreateCategoryRequest request); //POST categories{id}
+
+        Task<int> ImportCategoriesFromExcelAsync(IFormFile file); // 26 ene: Para migración lógica servicio de Excel
     }
 }

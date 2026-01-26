@@ -31,22 +31,6 @@ namespace TaskManagerAPI.Controllers
         }
 
 
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<CategoryDto>>> Get()
-        //{
-        //    var result = await _context.Categories
-        //        .OrderBy(c => c.Name)
-        //        .Select(c => new CategoryDto
-        //        {
-        //            Id = c.Id,
-        //            Name = c.Name
-        //        })
-        //        .ToListAsync();
-
-        //return Ok(result);
-        //}
-
-
         [HttpPost]
         public async Task<ActionResult<CategoryDto>> Create([FromBody] CreateCategoryRequest request)
         {
@@ -54,29 +38,6 @@ namespace TaskManagerAPI.Controllers
             var dto = await _categoryService.CreateCategoryAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
         }
-
-
-        //[HttpPost]
-        //public async Task<ActionResult<CategoryDto>> Create([FromBody] CreateCategoryRequest request)
-        //{
-
-        //    var entity = new Category
-        //    {
-        //        Name = request.Name.Trim()
-        //    };
-
-        //    _context.Categories.Add(entity);
-        //    await _context.SaveChangesAsync();
-
-        //    var dto = new CategoryDto
-        //    {
-        //        Id = entity.Id,
-        //        Name = entity.Name
-        //    };
-
-        //    return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
-        //}
-
         
 
         [HttpGet("{id:int}")]
@@ -90,9 +51,18 @@ namespace TaskManagerAPI.Controllers
         }
 
 
-        //[HttpPost("import-excel")] // 26ene: Siempre método POST para cargar archivos
-        //public async Task<IActionResult> ImportFromExcel(IFormFile file) //ImportFromExcel = librería para recibir el excel
-        //{
+        [HttpPost("import-excel")] // 26ene: Siempre método POST para cargar archivos
+        public async Task<IActionResult> ImportFromExcel(IFormFile file) //ImportFromExcel = librería para recibir el excel
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No se recibió ningún archivo o está vacío.");
+
+            // Llamamos al servicio y él se encarga de todo el "trabajo sucio"
+            var count = await _categoryService.ImportCategoriesFromExcelAsync(file);
+
+            return Ok(new { Message = $"Se importaron {count} categorías nuevas." });
+        }
+
         //    if (file == null || file.Length == 0)
         //        return BadRequest("No se recibió ningún archivo o está vacío.");
 
