@@ -717,6 +717,13 @@
             "type": "string",
             "nullable": true
           },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
           "isDeleted": {
             "type": "boolean"
           },
