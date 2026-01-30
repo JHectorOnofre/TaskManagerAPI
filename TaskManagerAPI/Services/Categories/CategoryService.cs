@@ -92,7 +92,7 @@ namespace TaskManagerAPI.Services.Categories
                 }
             }
 
-            // Filtrar duplicados y guardar (Aquí el _context sí funciona)
+            // 27 ene: Filtrar duplicados y guardar (Aquí el _context sí funciona)
             var uniqueCategories = categories.GroupBy(c => c.Name.ToLower()).Select(g => g.First()).ToList();
             var existingNames = _context.Categories.Select(c => c.Name.ToLower()).ToHashSet();
             var newCategories = uniqueCategories.Where(c => !existingNames.Contains(c.Name.ToLower())).ToList();

@@ -8,7 +8,7 @@ using TaskManagerAPI.Interfaces.Tasks;
 using TaskManagerAPI.Models;
 using TaskManagerAPI.Utilities.Exceptions;
 
-public class TaskService : ITaskService
+public class TaskService : ITaskService // Servicio : Interfaz (puente de comunicación
 {
 
     private readonly AppDbContext _context;

@@ -15,7 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped);
 
-builder.Services.AddServices(); //13ene: se incluye lo que esté en el método de extensión creado
+builder.Services.AddServices(); //13ene: se incluye lo que esté en el método de extensión creado (ServiceConfiguration.cs)
 
 
 var app = builder.Build();
