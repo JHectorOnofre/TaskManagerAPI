@@ -24,44 +24,21 @@ namespace TaskManagerAPI.Controllers
             _taskService = taskService;
         }
 
+
+
         [HttpGet]
         public async Task<ActionResult<List<TaskItem>>> Get() // se agrega async, ActionResult
         {
-            ////return _context.Tasks.ToList();
-            //var tasks = await _context.Tasks
-            //    .Select(t => new TaskItemResponse
-            //    {
-            //    Id = t.Id,
-            //    Title = t.Title,
-            //    IsCompleted = t.IsComplete
-            //})
-            //.ToListAsync();
-
-            //return Ok(tasks);
             var result = await _taskService.GetTasksAsync(); // llamada al servicio, se guarda en var result
 
             return Ok(result);
         } 
 
 
+
         [HttpGet("{id:int}")]
         public async Task<ActionResult<TaskItemResponse>> GetById(int id)
         {
-            //var task = await _context.Tasks.FindAsync(id);
-
-            //if (task == null)
-            //    return NotFound();
-
-            //var dto = new TaskItemResponse
-            //{
-            //    Id = task.Id,
-            //    Title = task.Title,
-            //    IsCompleted= task.IsComplete
-            //};
-
-            //return Ok(dto);
-            
-            // result (viene del servicio) en lugar de task (era directa)
             var result = await _taskService.GetByIdAsync(id); // se llama al resultado de lo que hace  servicio (TaskService)
 
             if (result == null) // revisa si el servicio devuelve algo, si no: 404 
@@ -69,6 +46,7 @@ namespace TaskManagerAPI.Controllers
 
             return Ok(result); // entrega el resultado final dado por el servicio TaskService
         }
+
 
 
         [HttpPost]
@@ -80,39 +58,16 @@ namespace TaskManagerAPI.Controllers
             if (string.IsNullOrWhiteSpace(request.Title))
                 return BadRequest("Title es requerido.");
 
-            //var categoryExists = await _context.Categories.AnyAsync(c => c.Id == request.CategoryId); //9enero: se agrega verificación si el registro con el Id existe (antes de crear registro con info. incompleta)
-            //if (!categoryExists)
-            //    throw new BusinessException("La categoría no existe.", 404); // 15 ene: lanza la excepción personalizada
-
-            //var entity = new TaskItem
-            //{
-            //    Title = request.Title.Trim(),
-            //    IsComplete = false,
-            //    CategoryId = request.CategoryId,
-            //};
-
-            //_context.Tasks.Add(entity);
-            //await _context.SaveChangesAsync(); // Ejecuta el guardado de los cambios (se debe hacer siempre que se modifique la BD=
-
-            //var dto = new TaskItemResponse
-            //{
-            //    Id = entity.Id,
-            //    Title = entity.Title,
-            //    IsCompleted = entity.IsComplete
-            //};
-
-            //return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto); // devuelve respuesta compuesta por 3 parámetros (según lógica req)
-
             var dto = await _taskService.CreateTaskAsync(request);
 
             return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto); // devuelve la respuesta exitosa con la ruta 
         }
 
 
+
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskRequest request)
         {
-
             if (request == null) return BadRequest("Body requerido.");
             if (string.IsNullOrWhiteSpace(request.Title)) return BadRequest("Title es requerido.");
 
@@ -124,6 +79,7 @@ namespace TaskManagerAPI.Controllers
         }
 
 
+
         [HttpDelete("{id:int}")] // Se debe hacer un borrado lógico que se mantiene en memoria (campo deleted)
         public async Task<IActionResult> Delete(int id)
         {
@@ -133,6 +89,7 @@ namespace TaskManagerAPI.Controllers
 
             return NoContent(); // si todo sale bien, el "NoContent" que se tenía antes
         }
+
 
 
         [HttpGet("search")]
@@ -157,6 +114,7 @@ namespace TaskManagerAPI.Controllers
         }
 
 
+
         [HttpGet("with-category")]
         public async Task<ActionResult<IEnumerable<TaskWithCategoryDto>>> GetWithCategory()
         {
@@ -164,6 +122,7 @@ namespace TaskManagerAPI.Controllers
             var result = await _taskService.GetTasksWithCategoryAsync(); // en lugar de usar _context ahora es _taskService
             return Ok(result);
         } 
+
 
 
         [HttpGet("advanced-search")]
@@ -200,4 +159,6 @@ namespace TaskManagerAPI.Controllers
  * - retorna lo que se pide, en lugar de exponer la entidad directamente
  * - permite cambiar la BD sin romper la estructura
  * - así como los ID en BD suelen ser campos autoincrementados, no es algo que un usuario haga
+ * 
+ * !Los DTO viven en el backend
 */
