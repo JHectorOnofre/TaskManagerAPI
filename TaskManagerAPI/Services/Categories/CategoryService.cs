@@ -97,7 +97,7 @@ namespace TaskManagerAPI.Services.Categories
             var existingNames = _context.Categories.Select(c => c.Name.ToLower()).ToHashSet();
             var newCategories = uniqueCategories.Where(c => !existingNames.Contains(c.Name.ToLower())).ToList();
 
-            _context.Categories.AddRange(newCategories);
+            _context.Categories.AddRange(newCategories); 
             await _context.SaveChangesAsync();
 
             return newCategories.Count;

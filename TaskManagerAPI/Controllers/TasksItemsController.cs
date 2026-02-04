@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using TaskManagerAPI.DTOs;
 using TaskManagerAPI.DTOs.Task;
-using TaskManagerAPI.Interfaces.Tasks;
+using TaskManagerAPI.Interfaces.Tasks; // apunta a la Interfaz
 using TaskManagerAPI.Models;
 using TaskManagerAPI.Utilities.Exceptions;
 
@@ -32,7 +32,7 @@ namespace TaskManagerAPI.Controllers
             var result = await _taskService.GetTasksAsync(); // llamada al servicio, se guarda en var result
 
             return Ok(result);
-        } 
+        }
 
 
 
@@ -50,7 +50,7 @@ namespace TaskManagerAPI.Controllers
 
 
         [HttpPost]
-        public async Task<ActionResult<TaskItemResponse>> Create([FromBody] CreateTaskRequest request) 
+        public async Task<ActionResult<TaskItemResponse>> Create([FromBody] CreateTaskRequest request)
         {
             if (request == null)
                 return BadRequest("Body requerido.");
@@ -121,12 +121,12 @@ namespace TaskManagerAPI.Controllers
 
             var result = await _taskService.GetTasksWithCategoryAsync(); // en lugar de usar _context ahora es _taskService
             return Ok(result);
-        } 
+        }
 
 
 
         [HttpGet("advanced-search")]
-        public async Task<ActionResult<PagedResultDto<TaskWithCategoryDto>>> AdvancedSearch (
+        public async Task<ActionResult<PagedResultDto<TaskWithCategoryDto>>> AdvancedSearch(
             [FromQuery] string? text,
             [FromQuery] bool? completed,
             [FromQuery] int? step,
@@ -148,7 +148,56 @@ namespace TaskManagerAPI.Controllers
 
             return Ok(result);
         }
-    }
+
+
+        /*[HttpPost("import-excel-tasks")] // La ruta será: api/TaskItem/import-excel-tasks* (no repetir nombre)
+        public async Task<IActionResult> ImportFromExcel(IFormFile file) //FromForm] 
+        {
+            // 1. Validación básica de entrada
+            if (file == null || file.Length == 0)
+                return BadRequest("No se recibió ningún archivo o el archivo está vacío.");
+
+            // Opcional: Validar que la extensión sea .xlsx
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (extension != ".xlsx")
+                return BadRequest("Formato no soportado. Por favor, sube un archivo Excel (.xlsx).");
+            
+            try
+            {
+                // 2. Llamamos a tu TaskService (asegúrate de que la variable sea _taskService)
+                // El método que creamos en el paso anterior devuelve el conteo de registros
+                var count = await _taskService.ImportTasksFromExcelAsync(file);
+
+                // 3. Respuesta de éxito
+                return Ok(new
+                {
+                    Message = $"Proceso completado: se importaron {count} tareas con éxito.",
+                    Count = count
+                });
+            }
+            catch (Exception ex)
+            {
+                // En caso de que el Excel venga mal formateado o falte una columna
+                return BadRequest($"Error al procesar el archivo Excel: {ex.Message}");
+            }
+        }*/
+
+        [HttpPost("import-tasks-excel")] //se genera nombre único
+        public async Task<IActionResult> ImportFromExcel(IFormFile file)
+        {
+            if (file == null || file.Length == 0) //validación
+                return BadRequest("No se recibió ningún archivo o está vacío.");
+
+            var count = await _taskService.ImportTasksFromExcelAsync(file);
+
+            return Ok(new { Message = $"Se importaron {count} categorías nuevas." });
+
+
+        }
+
+
+
+    }// Scope de la Clase 
 
 }
 

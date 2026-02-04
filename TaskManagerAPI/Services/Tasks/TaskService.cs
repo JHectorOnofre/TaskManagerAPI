@@ -1,6 +1,10 @@
 ﻿/* 13 ene: Se agrega capa */
 
+using ClosedXML.Excel; //recibir / abrir? el archivo
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata.Ecma335;
+using TaskManagerAPI.Controllers;
 using TaskManagerAPI.DTOs;
 using TaskManagerAPI.DTOs.Task;
 using TaskManagerAPI.Interfaces;
@@ -8,7 +12,7 @@ using TaskManagerAPI.Interfaces.Tasks;
 using TaskManagerAPI.Models;
 using TaskManagerAPI.Utilities.Exceptions;
 
-public class TaskService : ITaskService // Servicio : Interfaz (puente de comunicación
+public class TaskService : ITaskService // Servicio : Interfaz (puente de comunicación)
 {
 
     private readonly AppDbContext _context;
@@ -99,7 +103,7 @@ public class TaskService : ITaskService // Servicio : Interfaz (puente de comuni
             })
             .ToListAsync();
 
-        return result; 
+        return result;
     }
 
 
@@ -207,7 +211,7 @@ public class TaskService : ITaskService // Servicio : Interfaz (puente de comuni
         if (!categoryExists)
             throw new BusinessException("La categoría no existe.", 404);
 
-        
+
         var entity = new TaskItem // 2. Mapeo del Request a la Entidad
         {
             Title = request.Title.Trim(),
@@ -261,4 +265,112 @@ public class TaskService : ITaskService // Servicio : Interfaz (puente de comuni
         return (tasks);
     }
 
-}
+
+
+    //public async Task<int> ImportTasksFromExcelAsync(IFormFile file)
+    //{
+    //    var tasks = new List<TaskItem>(); // Del modelo que es TaskItem
+
+    //    using (var stream = new MemoryStream())
+    //    {
+    //        await file.CopyToAsync(stream);
+    //        stream.Position = 0;
+
+    //        using (var workbook = new XLWorkbook(stream))
+    //        {
+    //            var worksheet = workbook.Worksheets.First();
+
+    //            var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Saltamos la primera fila (encabezados = 1)
+
+    //            foreach (var row in rows) // El mapeo para recorrrer columnas A a la  F
+    //            {
+
+    //                var title = row.Cell(2).GetString();
+    //                if (string.IsNullOrWhiteSpace(title)) continue;
+
+    //                var task = new TaskItem
+    //                {
+    //                    Title = title.Trim(), // como title
+    //                    IsComplete = row.Cell(3).GetBoolean(), // existe Boolean
+    //                    Step = int.TryParse(row.Cell(4).GetString(), out var s) ? s : 0,
+    //                    CategoryId = int.TryParse(row.Cell(5).GetString(), out var cId) ? cId : 0,
+    //                    IsDeleted = false, // Por defecto al importar
+    //                    CreatedAt = DateTime.Now // Si tu modelo tiene fecha de creación
+    //                };
+
+    //                tasks.Add(task);
+    //            }
+    //        }
+    //    }
+
+    //    if (tasks.Any())
+    //    {
+    //        _context.Tasks.AddRange(tasks);
+    //        await _context.SaveChangesAsync();
+    //    }
+    //    return tasks.Count;
+    //}
+
+
+
+    // SIN DTO:
+    public async Task<int> ImportTasksFromExcelAsync(IFormFile file)
+    {
+        var tasks = new List<TaskItem>();
+
+        var existeCategoryId = await _context.Categories.Select(c => c.Id).ToHashSetAsync();
+
+
+        using (var stream = new MemoryStream())
+        {
+            await file.CopyToAsync(stream);
+            stream.Position = 0;
+
+            using (var workbook = new XLWorkbook(stream))
+            {
+                var worksheet = workbook.Worksheets.First();
+                var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // misma lógica abreviada para saltar la  1ra fila (cabecera)
+
+                foreach (var row in rows)
+                {
+                    var title = row.Cell(2).GetString(); // Donde "title" (column B) es equivalente a name de la 1ra hoja de excel
+                    if (string.IsNullOrWhiteSpace(title)) continue;
+
+                    int cId = int.TryParse(row.Cell(5).GetString(), out var tempId) ? tempId : 0; //1. ternario para leer el category Id
+
+                    if (!existeCategoryId.Contains(cId)) continue; // validar si la cat no existe (se salta)
+
+                    string completeText = row.Cell(3).GetString().ToLower().Trim();
+                    bool isCompleted = completeText == "TRUE" || completeText == "VERDADERO"; // leer y convertir el valor 
+
+                    int step = int.TryParse(row.Cell(4).GetString(), out var s) ? s : 0;
+                    
+                    var task = new TaskItem
+                    {
+                        Title = title.Trim(),
+                        IsComplete = isCompleted, // ya validado
+                        Step = step,  //3 ya validado 
+                        CategoryId = cId, // ya validado
+                        IsDeleted = false, //row.Cell(6).GetBoolean(),
+                        // craetedAt sería DateTime.Now?
+
+                    };
+
+                    tasks.Add(task);
+                }
+
+            }
+
+        }
+        if (tasks.Any()) // para guardar
+        {
+            _context.Tasks.AddRange(tasks);
+            await _context.SaveChangesAsync();
+        }
+        return tasks.Count;
+
+    } //scope public
+
+
+
+} // scope clase 

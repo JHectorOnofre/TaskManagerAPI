@@ -1,5 +1,5 @@
 ﻿using TaskManagerAPI.DTOs;
-using TaskManagerAPI.DTOs.Task;
+using TaskManagerAPI.DTOs.Task; // referencia al archivo donde están los DTOs
 
 namespace TaskManagerAPI.Interfaces.Tasks
 {
@@ -33,6 +33,8 @@ namespace TaskManagerAPI.Interfaces.Tasks
         Task<IEnumerable<TaskSearchResult>> GetPagedTasksAsync(int page, int pageSize); // GET "paged"
         
         Task<IEnumerable<TaskWithCategoryDto>> GetTasksWithCategoryAsync(); // para servicio GET "with category"
+
+        Task<int> ImportTasksFromExcelAsync(IFormFile file); //3feb | 1. Interfaz-puente
 
 
     } // Scope de la interfaz

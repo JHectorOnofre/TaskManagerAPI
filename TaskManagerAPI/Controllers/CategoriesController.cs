@@ -88,7 +88,7 @@ namespace TaskManagerAPI.Controllers
         //                    isHeader = false;
         //                    continue;
         //                }
-
+        
         //                // 3 líneas para extraer los datos de cada columna (de izq-derecha)
         //                var name = row.Cell(1).GetString();      // Columna A
         //                var code = row.Cell(2).GetString();      // Columna B
