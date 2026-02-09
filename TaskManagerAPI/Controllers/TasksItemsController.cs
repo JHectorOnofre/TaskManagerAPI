@@ -196,6 +196,31 @@ namespace TaskManagerAPI.Controllers
         }
 
 
+        [HttpGet("ajax-search")] // 5 feb
+        public async Task<IActionResult> AjaxSearch([FromQuery] string? text)
+        {
+            var query = _context.Tasks.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(text))
+                query = query.Where(t => t.Title.Contains(text));
+
+            var results = await query
+                .OrderBy(t => t.Id)
+                .Take(50)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    //t.CategoryName,
+                    t.IsComplete,
+                    t.Step
+                })
+                .ToListAsync();
+
+            return Ok(results);
+        }
+
+
 
     }// Scope de la Clase 
 
