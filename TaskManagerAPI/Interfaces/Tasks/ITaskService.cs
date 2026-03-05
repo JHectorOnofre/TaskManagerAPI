@@ -36,6 +36,7 @@ namespace TaskManagerAPI.Interfaces.Tasks
 
         Task<int> ImportTasksFromExcelAsync(IFormFile file); //3feb | 1. Interfaz-puente
 
+        Task<IEnumerable<object>> GetTasksAjaxAsync(string? text); // Para migración lógica del ajax-search (sesión 5 feb)
 
     } // Scope de la interfaz
 

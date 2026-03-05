@@ -235,14 +235,11 @@ public class TaskService : ITaskService // Servicio : Interfaz (puente de comuni
 
     public async Task<TaskItemResponse?> GetByIdAsync(int id) // GET{id}
     {
-        // CORTADO: La lógica de búsqueda en la BD
-        var task = await _context.Tasks.FindAsync(id);
+        var task = await _context.Tasks.FindAsync(id);  // La lógica de búsqueda en la BD
 
-        // Si es nulo, devolvemos null (el controlador decidirá qué error HTTP enviar)
-        if (task == null) return null;
+        if (task == null) return null; // Si es nulo, devolvemos null (el controlador decidirá qué error HTTP enviar)
 
-        // CORTADO: El mapeo de la entidad al DTO
-        return new TaskItemResponse
+        return new TaskItemResponse // El mapeo de la entidad al DTO
         {
             Id = task.Id,
             Title = task.Title,
@@ -314,7 +311,7 @@ public class TaskService : ITaskService // Servicio : Interfaz (puente de comuni
 
 
     // SIN DTO:
-    public async Task<int> ImportTasksFromExcelAsync(IFormFile file)
+    public async Task<int> ImportTasksFromExcelAsync(IFormFile file) // Para asginación excel
     {
         var tasks = new List<TaskItem>();
 
@@ -369,8 +366,27 @@ public class TaskService : ITaskService // Servicio : Interfaz (puente de comuni
         }
         return tasks.Count;
 
-    } //scope public
+    } //scope public ImportTasksFromExcelAsyn
 
+
+    public async Task<IEnumerable<object>> GetTasksAjaxAsync(string? text) // Lógica del servicio HttpGet("ajax-search") 5 feb
+    {
+        var query = _context.Tasks.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(text))
+            query = query.Where(t => t.Title.Contains(text));
+
+        return await query
+            .OrderBy(t => t.Id)
+            .Take(50)
+            .Select(t => new {
+                t.Id,
+                t.Title,
+                t.IsComplete,
+                t.Step
+            })
+            .ToListAsync();
+    }
 
 
 } // scope clase 

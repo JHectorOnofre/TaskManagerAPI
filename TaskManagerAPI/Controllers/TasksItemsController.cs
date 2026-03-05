@@ -196,27 +196,10 @@ namespace TaskManagerAPI.Controllers
         }
 
 
-        [HttpGet("ajax-search")] // 5 feb
+        [HttpGet("ajax-search")] // 5 feb (lógica migrada: Interfaz y Servicio
         public async Task<IActionResult> AjaxSearch([FromQuery] string? text)
         {
-            var query = _context.Tasks.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(text))
-                query = query.Where(t => t.Title.Contains(text));
-
-            var results = await query
-                .OrderBy(t => t.Id)
-                .Take(50)
-                .Select(t => new
-                {
-                    t.Id,
-                    t.Title,
-                    //t.CategoryName,
-                    t.IsComplete,
-                    t.Step
-                })
-                .ToListAsync();
-
+            var results = await _taskService.GetTasksAjaxAsync(text);
             return Ok(results);
         }
 
